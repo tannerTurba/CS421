@@ -3,6 +3,8 @@ import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.Stack;
 
+import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
+
 public class PrefixEvaluator 
 {
     private class Node 
@@ -25,12 +27,96 @@ public class PrefixEvaluator
     Stack<Node> operands = new Stack<>();
     Stack<String> operators = new Stack<>();
 
+
+
+    public String rEvaluateExpression(Scanner scanner) 
+    {
+        String token = scanner.next();
+        //Return when an atomic value is reached. 
+        if (Character.isDigit(token.charAt(0)) || /*Character.isAlphabetic(token.charAt(0)) ||*/ token.charAt(0) == '-' && token.length() > 1)
+        {
+            return token;
+        }
+        if (Character.isAlphabetic(token.charAt(0))) 
+        {
+            return "undefined";
+        }
+        //Opening Parens mark the beginning of a new expression
+        else if (token.equals("(")) 
+        {
+            return rEvaluateExpression(scanner);
+        }
+        //Catch operators
+        else if (!Character.isDigit(token.charAt(0)) && !Character.isAlphabetic(token.charAt(0)) && token.charAt(0) != '(' && token.charAt(0) != ')' && token.length() == 1)
+        {
+            char operator = token.charAt(0);
+            String e1 = rEvaluateExpression(scanner);
+            String e2 = rEvaluateExpression(scanner);
+
+            int exp1, exp2;
+            try 
+            {
+                exp1 = Integer.parseInt(e1);
+                exp2 = Integer.parseInt(e2);
+            }
+            catch(Exception e) 
+            {
+                return "undefined";
+            }
+            
+
+            //Look at the next token. If it is a ')' the expression is over and can be returned.
+            token = scanner.next();
+            if(token.equals(")"))
+            {
+                if( operator == '+') 
+                {
+                    return exp1 + exp2 + "";
+                } 
+                else if (operator == '-') 
+                {
+                    return exp1 - exp2 + "";
+                } 
+                else if (operator == '*') 
+                {
+                    return exp1 * exp2 + "";
+                } 
+                else if (operator == '/') 
+                {
+                    return exp1 / exp2 + "";
+                } 
+                else if (operator == '^') 
+                {
+                    return (int) Math.pow(exp1, exp2) + "";
+                } 
+                else if (operator == '%') 
+                {
+                    return exp1 % exp2 + "";
+                } 
+                else if (operator == '!') 
+                {
+                    return -exp1 + "";
+                }
+            }
+        }
+        
+
+        if (token.charAt(0) == ')')
+        {
+            
+        }
+        return "";
+    }
+
+
     public PrefixEvaluator(String expression) 
     {
         this.expression = expression;
+        Scanner scanner = new Scanner(this.expression);
+        System.out.println(rEvaluateExpression(scanner));
     }
 
-    public String evaluateExpression()
+    public String evaluateExpressions()
     {
         Scanner scanner = new Scanner(expression);
         return handleExpression(scanner, new Hashtable<>(), false);

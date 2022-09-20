@@ -1,5 +1,6 @@
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -27,19 +28,73 @@ public class PrefixEvaluator
     Stack<Node> operands = new Stack<>();
     Stack<String> operators = new Stack<>();
 
+    private Map<String, String> EvaluateEnvironment(Scanner scanner) 
+    {
+        String token = scanner.next();
+        Map<String, String> environment = new Hashtable<>();
 
+        //Get a dictionary of environment.
+        if (token.equals("(")) 
+        {
+            Map<String, String> dictionary = EvaluateEnvironment(scanner);
+        
+            //Copy all values into a single map.
+            for (Map.Entry<String, String> entry : dictionary.entrySet()) {
+                environment.put(entry.getKey(), entry.getValue());
+            }
+            
+            //Consume closing parens and return.
+            scanner.next();
+            return environment;
+        }
+        //A character is found, so it needs to be defined.
+        else if (Character.isAlphabetic(token.charAt(0)))
+        {
+            String id = token;
+            String definition = rEvaluateExpression(scanner);
+            
+            Map<String, String> dictionary = new Hashtable<>();
+            dictionary.put(id, definition);
+            return dictionary;
+        }
+        else 
+        {
+            return environment;
+        }
+    }
 
     public String rEvaluateExpression(Scanner scanner) 
     {
         String token = scanner.next();
+        Map<String, String> environment = new Hashtable<>();
+
         //Return when an atomic value is reached. 
         if (Character.isDigit(token.charAt(0)) || /*Character.isAlphabetic(token.charAt(0)) ||*/ token.charAt(0) == '-' && token.length() > 1)
         {
             return token;
         }
-        if (Character.isAlphabetic(token.charAt(0))) 
+        //Evaluate the environment when block is used.
+        else if (token.toLowerCase().equals("block"))
         {
-            return "undefined";
+            environment = EvaluateEnvironment(scanner);
+            return rEvaluateExpression(scanner);
+        }
+        //Return the map value or undefined when an alphabetic character is found.
+        else if (Character.isAlphabetic(token.charAt(0))) 
+        {
+            try 
+            {
+                String value = environment.get(token);
+                if(!value.equals("null"))
+                {
+                    return value;
+                }
+                return "undefined";
+            }
+            catch(Exception e) 
+            {
+                return "undefined";
+            }
         }
         //Opening Parens mark the beginning of a new expression
         else if (token.equals("(")) 

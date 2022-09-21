@@ -8,6 +8,16 @@ import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
 public class PrefixEvaluator 
 {
+
+
+    public PrefixEvaluator(String expression) 
+    {
+        this.expression = expression;
+        Scanner scanner = new Scanner(this.expression);
+        System.out.println(rEvaluateExpression(scanner, new Hashtable<>()));
+    }
+
+
     private class Node 
     {
         private Node left;
@@ -28,6 +38,15 @@ public class PrefixEvaluator
     Stack<Node> operands = new Stack<>();
     Stack<String> operators = new Stack<>();
 
+    private Map<String, String> addToEnvironment(Map<String, String> environment, Map<String, String> dictionary) {
+
+        //Copy all values into a single map.
+        for (Map.Entry<String, String> entry : dictionary.entrySet()) {
+            environment.put(entry.getKey(), entry.getValue());
+        }
+        return environment;
+    }
+
     private Map<String, String> EvaluateEnvironment(Scanner scanner) 
     {
         String token = scanner.next();
@@ -38,20 +57,24 @@ public class PrefixEvaluator
         {
             Map<String, String> dictionary = EvaluateEnvironment(scanner);
         
-            //Copy all values into a single map.
-            for (Map.Entry<String, String> entry : dictionary.entrySet()) {
-                environment.put(entry.getKey(), entry.getValue());
-            }
+            environment = addToEnvironment(environment, dictionary);
             
-            //Consume closing parens and return.
-            scanner.next();
+            //Consume closing parens if a value was added to the environment
+            if (dictionary.size() > 0) 
+            {
+                token = scanner.next();
+                if (token.equals("(")) 
+                {
+                    return addToEnvironment(environment, EvaluateEnvironment(scanner));
+                }
+            }
             return environment;
         }
         //A character is found, so it needs to be defined.
         else if (Character.isAlphabetic(token.charAt(0)))
         {
             String id = token;
-            String definition = rEvaluateExpression(scanner);
+            String definition = rEvaluateExpression(scanner, environment);
             
             Map<String, String> dictionary = new Hashtable<>();
             dictionary.put(id, definition);
@@ -63,10 +86,9 @@ public class PrefixEvaluator
         }
     }
 
-    public String rEvaluateExpression(Scanner scanner) 
+    public String rEvaluateExpression(Scanner scanner, Map<String, String> environment) 
     {
         String token = scanner.next();
-        Map<String, String> environment = new Hashtable<>();
 
         //Return when an atomic value is reached. 
         if (Character.isDigit(token.charAt(0)) || /*Character.isAlphabetic(token.charAt(0)) ||*/ token.charAt(0) == '-' && token.length() > 1)
@@ -77,7 +99,7 @@ public class PrefixEvaluator
         else if (token.toLowerCase().equals("block"))
         {
             environment = EvaluateEnvironment(scanner);
-            return rEvaluateExpression(scanner);
+            return rEvaluateExpression(scanner, environment);
         }
         //Return the map value or undefined when an alphabetic character is found.
         else if (Character.isAlphabetic(token.charAt(0))) 
@@ -99,14 +121,14 @@ public class PrefixEvaluator
         //Opening Parens mark the beginning of a new expression
         else if (token.equals("(")) 
         {
-            return rEvaluateExpression(scanner);
+            return rEvaluateExpression(scanner, environment);
         }
         //Catch operators
         else if (!Character.isDigit(token.charAt(0)) && !Character.isAlphabetic(token.charAt(0)) && token.charAt(0) != '(' && token.charAt(0) != ')' && token.length() == 1)
         {
             char operator = token.charAt(0);
-            String e1 = rEvaluateExpression(scanner);
-            String e2 = rEvaluateExpression(scanner);
+            String e1 = rEvaluateExpression(scanner, environment);
+            String e2 = rEvaluateExpression(scanner, environment);
 
             int exp1, exp2;
             try 
@@ -156,19 +178,11 @@ public class PrefixEvaluator
         }
         
 
-        if (token.charAt(0) == ')')
+        if (token.equals(")") && scanner.hasNext())
         {
-            
+            return rEvaluateExpression(scanner, environment);
         }
         return "";
-    }
-
-
-    public PrefixEvaluator(String expression) 
-    {
-        this.expression = expression;
-        Scanner scanner = new Scanner(this.expression);
-        System.out.println(rEvaluateExpression(scanner));
     }
 
     public String evaluateExpressions()
@@ -224,7 +238,7 @@ public class PrefixEvaluator
         }
         scanner.close();
         root = operands.pop();
-        return evaluate(root);
+        return "";
     }
 
     private String handleBlock(Scanner scanner) 
@@ -263,95 +277,4 @@ public class PrefixEvaluator
         return handleExpression(scanner, dictionary, needDictionaryDef);  
     }
 
-    public String evaluate() 
-    {
-        return evaluate(root);
-    }
-
-    private String evaluate(Node root) 
-    {
-        int left;
-        int right;
-        int x = 0;
-        if(root != null) {
-            //recursively obtains the left and right nodes.
-            if (Character.isDigit(root.data.charAt(0))) 
-            {
-                return root.data;
-            }
-            else 
-            {
-                try {
-                    left = Integer.parseInt(evaluate(root.left));
-                    right = Integer.parseInt(evaluate(root.right));  
-                } 
-                catch(NumberFormatException e) 
-                {
-                    return "undefined";
-                }
-            }
-
-            //determines the return value "x" based on certain conditions.
-            if(Character.isDigit(root.data.charAt(0)) || (root.data.charAt(0) == '-' && root.data.length() > 1)) 
-            {
-                x = Integer.parseInt(root.data);
-            } 
-            else if(Character.isAlphabetic(root.data.charAt(0))) 
-            {
-                return "undefined";
-            }
-            else 
-            {
-                char sign = root.data.charAt(0);
-                if( sign == '+') {
-                    x = left + right;
-                } else if (sign == '-') {
-                    x = left - right;
-                } else if (sign == '*') {
-                    x = left * right;
-                } else if (sign == '/') {
-                    x = left / right;
-                } else if (sign == '^') {
-                    x = (int) Math.pow(left, right);
-                } else if (sign == '%') {
-                    x = left % right;
-                } else if (sign == '!') {
-                    x = -left ;
-                }
-            }
-        }
-        return x + "";
-    }
-
-    //The public method to start the recursive process to obtain the infix representation.
-    public String toInfix() {
-        //return a fully parenthesized infix representation of the expression tree
-        //you can assume the tree is not empty
-        return toInfix(root);
-    }
-
-    //The private method for the recursive process to obtain the infix representation.
-    //Does most of the work.
-    private String toInfix(Node r) {
-        //return a fully parenthesized infix representation
-        //of the expression tree rooted at r
-        String left;
-        String right;
-        String infixRepresentation = "";
-        if(r != null) {
-            //obtains the left and right nodes with recursion.
-            left = toInfix(r.left);
-            right = toInfix(r.right);
-
-            //determines the infix representation to return, based on certain conditions.
-            if(r.left == null) {
-                infixRepresentation = left + r.data + right;
-            } else if(r.data.equals("!")){
-                infixRepresentation = "(- " + left + ")";
-            } else {
-                infixRepresentation = "(" + left + " " + r.data + " " + right + ")";
-            }
-        }
-        return infixRepresentation;
-    }
 }

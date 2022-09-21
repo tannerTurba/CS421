@@ -4,8 +4,8 @@ import java.io.*;
 
 public class Driver {
     public static void main(String[] args) {
-        new Driver();
-        // new Driver("sample.txt");
+        // new Driver();
+        new Driver("sample.txt");
     }
 
     public Driver() {

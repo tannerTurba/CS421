@@ -8,8 +8,6 @@ import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
 public class PrefixEvaluator 
 {
-
-
     public PrefixEvaluator(String expression) 
     {
         this.expression = expression;
@@ -17,25 +15,8 @@ public class PrefixEvaluator
         System.out.println(rEvaluateExpression(scanner, new Hashtable<>()));
     }
 
-
-    private class Node 
-    {
-        private Node left;
-        private String data;
-        private Node right;
-
-        private Node(Node l, String d, Node r) 
-        {
-            left = l;
-            data = d;
-            right = r;
-        }
-    }
-
-    private Node root;
     private String expression;
     Stack<Dictionary<String, String>> dictionaries = new Stack<>();
-    Stack<Node> operands = new Stack<>();
     Stack<String> operators = new Stack<>();
 
     private Map<String, String> addToEnvironment(Map<String, String> environment, Map<String, String> dictionary) {
@@ -54,13 +35,11 @@ public class PrefixEvaluator
 
         //Get a dictionary of environment.
         if (token.equals("(")) 
-        {
-            Map<String, String> dictionary = EvaluateEnvironment(scanner);
-        
-            environment = addToEnvironment(environment, dictionary);
+        {        
+            environment = addToEnvironment(environment, EvaluateEnvironment(scanner));
             
             //Consume closing parens if a value was added to the environment
-            if (dictionary.size() > 0) 
+            if (environment.size() > 0) 
             {
                 token = scanner.next();
                 if (token.equals("(")) 
@@ -100,6 +79,8 @@ public class PrefixEvaluator
         {
             environment = EvaluateEnvironment(scanner);
             return rEvaluateExpression(scanner, environment);
+
+            // return handleBlock(scanner);
         }
         //Return the map value or undefined when an alphabetic character is found.
         else if (Character.isAlphabetic(token.charAt(0))) 
@@ -141,7 +122,6 @@ public class PrefixEvaluator
                 return "undefined";
             }
             
-
             //Look at the next token. If it is a ')' the expression is over and can be returned.
             token = scanner.next();
             if(token.equals(")"))
@@ -177,7 +157,6 @@ public class PrefixEvaluator
             }
         }
         
-
         if (token.equals(")") && scanner.hasNext())
         {
             return rEvaluateExpression(scanner, environment);
@@ -185,68 +164,11 @@ public class PrefixEvaluator
         return "";
     }
 
-    public String evaluateExpressions()
-    {
-        Scanner scanner = new Scanner(expression);
-        return handleExpression(scanner, new Hashtable<>(), false);
-    }
-
-    private String handleExpression(Scanner scanner, Dictionary<String, String> dictionary, boolean isDictionaryDef) 
-    {
-        Node left;
-        Node right;
-        while(scanner.hasNext()) 
-        {
-            String token = scanner.next();
-
-            if (token.toLowerCase().equals("block"))
-            {
-                operands.push(new Node(null, handleBlock(scanner), null));
-            }
-            else if (!Character.isDigit(token.charAt(0)) && !Character.isAlphabetic(token.charAt(0)) && token.charAt(0) != '(' && token.charAt(0) != ')' && token.length() == 1)
-            {
-                operators.push(token);
-            }
-            else if (Character.isDigit(token.charAt(0)) || Character.isAlphabetic(token.charAt(0)) || token.charAt(0) == '-') 
-            {
-                if (isDictionaryDef) 
-                {
-                    return token;
-                }
-                operands.push(new Node(null, token, null));
-            }
-            else if (token.charAt(0) == ')')
-            {
-                if (operators.size() > 0 && dictionary.isEmpty()) 
-                {
-                    right = operands.pop();
-                    left = operands.pop();
-                    String operator = operators.pop();
-                    operands.push(new Node(left, operator, right)); 
-                }
-                else if (!dictionary.isEmpty()) 
-                {
-                    String blockExpressionString = operands.pop().data;
-                    String translatedBlockExpression = dictionary.get(blockExpressionString);
-                    if (translatedBlockExpression != null) 
-                    {
-                       return translatedBlockExpression; 
-                    }
-                    return blockExpressionString;
-                }
-            }
-        }
-        scanner.close();
-        root = operands.pop();
-        return "";
-    }
-
     private String handleBlock(Scanner scanner) 
     {
         Stack<String> parens = new Stack<>();
-        Dictionary<String, String> dictionary = new Hashtable<>();
+        Map<String, String> dictionary = new Hashtable<>();
         String token = scanner.next();
-        boolean needDictionaryDef = false;
         do
         {
             if (token.equals("(")) 
@@ -259,22 +181,16 @@ public class PrefixEvaluator
             }
             else if (Character.isAlphabetic(token.charAt(0)))
             {
-                needDictionaryDef = true;
-                dictionary.put(token, handleExpression(scanner, dictionary, needDictionaryDef));
-                needDictionaryDef = false;
+                dictionary.put(token, rEvaluateExpression(scanner, dictionary));
             }
             
             if(!parens.isEmpty())
             {
                 token = scanner.next();
             }
-            else 
-            {
-                dictionaries.push(dictionary);
-            }
         } while (!parens.isEmpty());
 
-        return handleExpression(scanner, dictionary, needDictionaryDef);  
+        return rEvaluateExpression(scanner, dictionary);  
     }
 
 }

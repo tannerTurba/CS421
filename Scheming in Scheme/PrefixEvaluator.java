@@ -1,3 +1,4 @@
+
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Scanner;
@@ -16,9 +17,10 @@ public class PrefixEvaluator
     private String expression;
     Stack<String> operators = new Stack<>();
 
-    private String evaluateBlock(Scanner scanner) 
+    private String evaluateBlock(Scanner scanner, Map<String, String> environment) 
     {
         Map<String, String> env = new Hashtable<>();
+        env.putAll(environment);
         Stack<String> parens = new Stack<>();
         String token;
         do {
@@ -70,7 +72,7 @@ public class PrefixEvaluator
         //Evaluate the environment when block is used.
         else if (token.toLowerCase().equals("block"))
         {
-            return evaluateBlock(scanner);
+            return evaluateBlock(scanner, environment);
         }
         //Return the map value or character when an alphabetic character is found.
         else if (Character.isAlphabetic(token.charAt(0))) 
@@ -117,30 +119,36 @@ public class PrefixEvaluator
 
         //Consume parens and evaluate expression
         scanner.next();
-        if( operator == '+') 
-        {
-            return exp1 + exp2 + "";
-        } 
-        else if (operator == '-') 
-        {
-            return exp1 - exp2 + "";
-        } 
-        else if (operator == '*') 
-        {
-            return exp1 * exp2 + "";
-        } 
-        else if (operator == '/') 
-        {
-            return exp1 / exp2 + "";
-        } 
-        else if (operator == '^') 
-        {
-            return (int) Math.pow(exp1, exp2) + "";
-        } 
-        else if (operator == '%') 
-        {
-            return exp1 % exp2 + "";
-        } 
+        try {
+            if( operator == '+') 
+            {
+                return exp1 + exp2 + "";
+            } 
+            else if (operator == '-') 
+            {
+                return exp1 - exp2 + "";
+            } 
+            else if (operator == '*') 
+            {
+                return exp1 * exp2 + "";
+            } 
+            else if (operator == '/') 
+            {
+                return (double)exp1 / (double)exp2 + "";
+            } 
+            else if (operator == '^') 
+            {
+                return (int) Math.pow(exp1, exp2) + "";
+            } 
+            else if (operator == '%') 
+            {
+                return exp1 % exp2 + "";
+            } 
         return "";
+        }
+        catch(ArithmeticException e) {
+            return "undefined";
+        }
+        
     }
 }

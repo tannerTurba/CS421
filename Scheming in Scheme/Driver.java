@@ -9,11 +9,8 @@ public class Driver {
     }
 
     public Driver() {
-        // PrefixEvaluator pEvaluator = new PrefixEvaluator("( block ( ( q ( % ( block ( )  ( block ( ( a ( block ( ( a c ) ( f 4 ) ( h ( / ( + 9 9 ) 8 ) ) ( z j ) )  ( - h ( % ( ^ 3 ( + 6 10 ) ) ( block ( ( q 1 ) ( b 6 ) ( t 10 ) ( n 8 ) )  a )  ) ) )  ) ( f e ) ( l 5 ) ( o 11 ) )  11 )  )  ( * 2 10 ) ) ) ( a 10 ) ( y ( block ( ( p 1 ) ( t 6 ) ( g 7 ) ( w 11 ) ( o 4 ) )  ( block ( ( r ( block ( ( e 11 ) ( v 5 ) ( z 3 ) )  3 )  ) ( s w ) ( u ( - ( + ( - ( block ( )  w )  ( % ( block ( ( a 2 ) ( u 2 ) ( j 5 ) ( l 11 ) ( n 10 ) )  ( * 7 9 ) )  w ) ) 2 ) 10 ) ) ( f ( + ( block ( )  9 )  t ) ) ( h ( block ( )  ( block ( ( a 10 ) ( l 10 ) )  11 )  )  ) ( m t ) )  ( ^ t 10 ) )  )  ) )  y )");
-        PrefixEvaluator pEvaluator = new PrefixEvaluator("( block ( ( a c ) ( f 4 ) ( h ( / ( + 9 9 ) 8 ) ) ( z j ) )");
-
-
-        // System.out.println(pEvaluator.evaluateExpressions());
+        PrefixEvaluator pEvaluator = new PrefixEvaluator("( block ( ( q ( % ( block ( )  ( block ( ( a ( block ( ( a c ) ( f 4 ) ( h ( / ( + 9 9 ) 8 ) ) ( z j ) )  ( - h ( % ( ^ 3 ( + 6 10 ) ) ( block ( ( q 1 ) ( b 6 ) ( t 10 ) ( n 8 ) )  a )  ) ) )  ) ( f e ) ( l 5 ) ( o 11 ) )  11 )  )  ( * 2 10 ) ) ) ( a 10 ) ( y ( block ( ( p 1 ) ( t 6 ) ( g 7 ) ( w 11 ) ( o 4 ) )  ( block ( ( r ( block ( ( e 11 ) ( v 5 ) ( z 3 ) )  3 )  ) ( s w ) ( u ( - ( + ( - ( block ( )  w )  ( % ( block ( ( a 2 ) ( u 2 ) ( j 5 ) ( l 11 ) ( n 10 ) )  ( * 7 9 ) )  w ) ) 2 ) 10 ) ) ( f ( + ( block ( )  9 )  t ) ) ( h ( block ( )  ( block ( ( a 10 ) ( l 10 ) )  11 )  )  ) ( m t ) )  ( ^ t 10 ) )  )  ) )  y ) ");
+        // PrefixEvaluator pEvaluator = new PrefixEvaluator("( block ( ( a 3 ) ) ( * ( block ( ( a 4 ) ) a ) a ) )");
     }
 
     public Driver(String file) {

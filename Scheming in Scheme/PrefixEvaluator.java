@@ -11,7 +11,15 @@ public class PrefixEvaluator
         // handleOperation('/', new Scanner(" ( + 9 9 ) 8 )"), new Hashtable<>());
         this.expression = expression;
         Scanner scanner = new Scanner(this.expression);
-        System.out.println(EvaluateExpression(scanner, new Hashtable<>(), false));
+        String skaglan = EvaluateExpression(scanner, new Hashtable<>(), false);
+        try {
+            int done = (int) Long.parseLong(skaglan);
+            System.out.println(done);
+        }
+        catch(Exception e) {
+            System.out.println(skaglan);
+        }
+        
     }
 
     private String expression;
@@ -134,7 +142,7 @@ public class PrefixEvaluator
             } 
             else if (operator == '/') 
             {
-                return (double)exp1 / (double)exp2 + "";
+                return exp1 / exp2 + "";
             } 
             else if (operator == '^') 
             {

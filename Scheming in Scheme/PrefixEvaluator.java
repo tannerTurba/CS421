@@ -1,216 +1,162 @@
-import java.util.Dictionary;
+
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
 
 public class PrefixEvaluator 
 {
-    private class Node 
-    {
-        private Node left;
-        private String data;
-        private Node right;
-
-        private Node(Node l, String d, Node r) 
-        {
-            left = l;
-            data = d;
-            right = r;
-        }
-    }
-
-    private Node root;
-    private String expression;
-    Stack<Dictionary<String, String>> dictionaries = new Stack<>();
-    Stack<Node> operands = new Stack<>();
-    Stack<String> operators = new Stack<>();
-
     public PrefixEvaluator(String expression) 
     {
+        // handleOperation('/', new Scanner(" ( + 9 9 ) 8 )"), new Hashtable<>());
         this.expression = expression;
-    }
-
-    public String evaluateExpression()
-    {
-        Scanner scanner = new Scanner(expression);
-        return handleExpression(scanner, new Hashtable<>(), false);
-    }
-
-    private String handleExpression(Scanner scanner, Dictionary<String, String> dictionary, boolean isDictionaryDef) 
-    {
-        Node left;
-        Node right;
-        while(scanner.hasNext()) 
-        {
-            String token = scanner.next();
-
-            if (token.toLowerCase().equals("block"))
-            {
-                operands.push(new Node(null, handleBlock(scanner), null));
-            }
-            else if (!Character.isDigit(token.charAt(0)) && !Character.isAlphabetic(token.charAt(0)) && token.charAt(0) != '(' && token.charAt(0) != ')' && token.length() == 1)
-            {
-                operators.push(token);
-            }
-            else if (Character.isDigit(token.charAt(0)) || Character.isAlphabetic(token.charAt(0)) || token.charAt(0) == '-') 
-            {
-                if (isDictionaryDef) 
-                {
-                    return token;
-                }
-                operands.push(new Node(null, token, null));
-            }
-            else if (token.charAt(0) == ')')
-            {
-                if (operators.size() > 0 && dictionary.isEmpty()) 
-                {
-                    right = operands.pop();
-                    left = operands.pop();
-                    String operator = operators.pop();
-                    operands.push(new Node(left, operator, right)); 
-                }
-                else if (!dictionary.isEmpty()) 
-                {
-                    String blockExpressionString = operands.pop().data;
-                    String translatedBlockExpression = dictionary.get(blockExpressionString);
-                    if (translatedBlockExpression != null) 
-                    {
-                       return translatedBlockExpression; 
-                    }
-                    return blockExpressionString;
-                }
-            }
+        Scanner scanner = new Scanner(this.expression);
+        String skaglan = EvaluateExpression(scanner, new Hashtable<>(), false);
+        try {
+            int done = (int) Long.parseLong(skaglan);
+            System.out.println(done);
         }
-        scanner.close();
-        root = operands.pop();
-        return evaluate(root);
+        catch(Exception e) {
+            System.out.println(skaglan);
+        }
+        
     }
 
-    private String handleBlock(Scanner scanner) 
+    private String expression;
+    Stack<String> operators = new Stack<>();
+
+    private String evaluateBlock(Scanner scanner, Map<String, String> environment) 
     {
+        Map<String, String> env = new Hashtable<>();
+        env.putAll(environment);
         Stack<String> parens = new Stack<>();
-        Dictionary<String, String> dictionary = new Hashtable<>();
-        String token = scanner.next();
-        boolean needDictionaryDef = false;
-        do
-        {
-            if (token.equals("(")) 
+        String token;
+        do {
+            token = scanner.next();
+            if(token.equals("(")) 
             {
-                parens.push("(");
+                parens.push(token);
             }
-            else if (token.equals(")")) 
+            else if(token.equals(")"))
             {
                 parens.pop();
             }
-            else if (Character.isAlphabetic(token.charAt(0)))
+            else if(Character.isAlphabetic(token.charAt(0))) 
             {
-                needDictionaryDef = true;
-                dictionary.put(token, handleExpression(scanner, dictionary, needDictionaryDef));
-                needDictionaryDef = false;
+                String id = token;
+                String def = EvaluateExpression(scanner, env, true);
+                env.put(id, def);
             }
-            
-            if(!parens.isEmpty())
-            {
-                token = scanner.next();
-            }
-            else 
-            {
-                dictionaries.push(dictionary);
-            }
-        } while (!parens.isEmpty());
-
-        return handleExpression(scanner, dictionary, needDictionaryDef);  
+        } while(!parens.isEmpty());
+        String result = EvaluateExpression(scanner, env, false);
+        scanner.next();
+        return result;
     }
-
-    public String evaluate() 
+    
+    public String EvaluateExpression(Scanner scanner, Map<String, String> environment, boolean evaluatingBlock) 
     {
-        return evaluate(root);
-    }
+        //Get first token, consume if it is '('
+        String token = scanner.next();
+        if(token.equals("(")) 
+        {
+            token = scanner.next();
+        }
 
-    private String evaluate(Node root) 
-    {
-        int left;
-        int right;
-        int x = 0;
-        if(root != null) {
-            //recursively obtains the left and right nodes.
-            if (Character.isDigit(root.data.charAt(0))) 
+        //Return when an atomic value is reached. 
+        if (Character.isDigit(token.charAt(0)) || token.charAt(0) == '-' && token.length() > 1)
+        {
+            return token;
+        }
+        //Return undefined when undefined
+        else if (token.equals("undefined"))
+        {
+            return "undefined";
+        }
+        //Opening Parens mark the beginning of a new expression
+        else if (token.equals("(")) 
+        {
+            return EvaluateExpression(scanner, environment, false);
+        }
+        //Evaluate the environment when block is used.
+        else if (token.toLowerCase().equals("block"))
+        {
+            return evaluateBlock(scanner, environment);
+        }
+        //Return the map value or character when an alphabetic character is found.
+        else if (Character.isAlphabetic(token.charAt(0))) 
+        {
+            String value = environment.get(token);
+            if(value == null)
             {
-                return root.data;
-            }
-            else 
-            {
-                try {
-                    left = Integer.parseInt(evaluate(root.left));
-                    right = Integer.parseInt(evaluate(root.right));  
-                } 
-                catch(NumberFormatException e) 
+                if (evaluatingBlock) 
+                {
+                    return token;
+                }
+                else 
                 {
                     return "undefined";
                 }
             }
+            return value;
+        }
+        //Catch operators
+        else if (!Character.isDigit(token.charAt(0)) && !Character.isAlphabetic(token.charAt(0)) && token.charAt(0) != '(' && token.charAt(0) != ')' && token.length() == 1)
+        {
+            return handleOperation(token.charAt(0), scanner, environment);
+        }
 
-            //determines the return value "x" based on certain conditions.
-            if(Character.isDigit(root.data.charAt(0)) || (root.data.charAt(0) == '-' && root.data.length() > 1)) 
+        return "";
+    }
+
+    private String handleOperation(char operator, Scanner scanner, Map<String, String> environment) 
+    {
+        String e1 = EvaluateExpression(scanner, environment, false);
+        String e2 = EvaluateExpression(scanner, environment, false);
+
+        int exp1, exp2;
+        try 
+        {
+            exp1 = Integer.parseInt(e1);
+            exp2 = Integer.parseInt(e2);
+        }
+        catch(Exception e) 
+        {
+            scanner.next();
+            return "undefined";
+        }
+
+        //Consume parens and evaluate expression
+        scanner.next();
+        try {
+            if( operator == '+') 
             {
-                x = Integer.parseInt(root.data);
+                return exp1 + exp2 + "";
             } 
-            else if(Character.isAlphabetic(root.data.charAt(0))) 
+            else if (operator == '-') 
             {
-                return "undefined";
-            }
-            else 
+                return exp1 - exp2 + "";
+            } 
+            else if (operator == '*') 
             {
-                char sign = root.data.charAt(0);
-                if( sign == '+') {
-                    x = left + right;
-                } else if (sign == '-') {
-                    x = left - right;
-                } else if (sign == '*') {
-                    x = left * right;
-                } else if (sign == '/') {
-                    x = left / right;
-                } else if (sign == '^') {
-                    x = (int) Math.pow(left, right);
-                } else if (sign == '%') {
-                    x = left % right;
-                } else if (sign == '!') {
-                    x = -left ;
-                }
-            }
+                return exp1 * exp2 + "";
+            } 
+            else if (operator == '/') 
+            {
+                return exp1 / exp2 + "";
+            } 
+            else if (operator == '^') 
+            {
+                return (int) Math.pow(exp1, exp2) + "";
+            } 
+            else if (operator == '%') 
+            {
+                return exp1 % exp2 + "";
+            } 
+        return "";
         }
-        return x + "";
-    }
-
-    //The public method to start the recursive process to obtain the infix representation.
-    public String toInfix() {
-        //return a fully parenthesized infix representation of the expression tree
-        //you can assume the tree is not empty
-        return toInfix(root);
-    }
-
-    //The private method for the recursive process to obtain the infix representation.
-    //Does most of the work.
-    private String toInfix(Node r) {
-        //return a fully parenthesized infix representation
-        //of the expression tree rooted at r
-        String left;
-        String right;
-        String infixRepresentation = "";
-        if(r != null) {
-            //obtains the left and right nodes with recursion.
-            left = toInfix(r.left);
-            right = toInfix(r.right);
-
-            //determines the infix representation to return, based on certain conditions.
-            if(r.left == null) {
-                infixRepresentation = left + r.data + right;
-            } else if(r.data.equals("!")){
-                infixRepresentation = "(- " + left + ")";
-            } else {
-                infixRepresentation = "(" + left + " " + r.data + " " + right + ")";
-            }
+        catch(ArithmeticException e) {
+            return "undefined";
         }
-        return infixRepresentation;
+        
     }
 }

@@ -95,7 +95,11 @@
         ((to-number (get-first-value exp)) (to-number (get-first-value exp)))
         ((list? exp) (if (equal? (symbol->string (get-first-value exp)) "block") (evaluate-helper (car (cddr exp)) (block (cadr exp) env))
                          ((get-operation (car exp)) (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env))))
-        ((equal? (string-length(symbol->string (get-first-value exp))) 1) (if (environment-contains env exp) (get-from-environment env exp) ('undefined)))
+         ;;(cond ((equal? (symbol->string (get-first-value exp)) "undefined") "undefined")
+                           ;;((equal? (symbol->string (get-first-value exp)) "block") (evaluate-helper (car (cddr exp)) (block (cadr exp) env)))
+                           ;;(else (get-operation (car exp)) (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env))))
+         
+        ((equal? (string-length(symbol->string (get-first-value exp))) 1) (if (environment-contains env exp) (get-from-environment env exp) 'undefined))
         (else exp)))
 
 ;; Function that handles a block
@@ -113,7 +117,7 @@
 
 (define (get-from-environment env key)
   (cond ((null? env) '())
-         ((equal? key (car (car env))) (cdr (car env)))
+         ((equal? key (car (car env))) (cadr (car env)))
          (else (get-from-environment (cdr env) key))))
 
 (define (environment-contains env key)
@@ -126,6 +130,9 @@
         ((list? x) (car x))
         (else x)))
 
+(define (undefined-op x1 x2)
+  "undefined")
+
 ;; A list of the primitive operators
 (define primitives
   (list (cons '+ +)
@@ -136,7 +143,8 @@
         (cons '> >)
         (cons '< <)
         (cons '% modulo)
-        (cons '^ expt)))
+        (cons '^ expt)
+        (cons 'undefined undefined-op)))
 
 ;; Looks up a symbol from the primitive environment to get the procedure.
 (define (get-operation symb)

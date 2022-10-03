@@ -90,17 +90,43 @@
 (define (evaluate exp)
   (evaluate-helper exp '()))
 
+;; Exp is the expression to be evaluated. Env is the environment which is a list of pairs that contain a symbol and its value.
 (define (evaluate-helper exp env)
-  (cond ((null? exp) 0)
-        ((to-number (get-first-value exp)) (to-number (get-first-value exp)))
-        ((list? exp) (if (equal? (symbol->string (get-first-value exp)) "block") (evaluate-helper (car (cddr exp)) (block (cadr exp) env))
-                         ((get-operation (car exp)) (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env))))
-         ;;(cond ((equal? (symbol->string (get-first-value exp)) "undefined") "undefined")
-                           ;;((equal? (symbol->string (get-first-value exp)) "block") (evaluate-helper (car (cddr exp)) (block (cadr exp) env)))
-                           ;;(else (get-operation (car exp)) (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env))))
-         
-        ((equal? (string-length(symbol->string (get-first-value exp))) 1) (if (environment-contains env exp) (get-from-environment env exp) 'undefined))
+  (cond ((number? exp) exp)
+        ((equal? exp 'undefined) 'undefined)
+        ((symbol? exp) (get-from-environment env exp))
+        ((equal? (car exp) 'block) (evaluate-helper (car (cddr exp)) (block (cadr exp) env)))
+        ((equal? (car exp) '+) (add (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env)))
+        ((equal? (car exp) '-) (subtract (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env)))
+        ((equal? (car exp) '*) (multiply (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env)))
+        ((equal? (car exp) '/) (divide (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env)))
+        ((equal? (car exp) '^) (exponent (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env)))
+        ((equal? (car exp) '%) (my-modulo (evaluate-helper (cadr exp) env) (evaluate-helper (caddr exp) env)))
         (else exp)))
+
+(define (add x y)
+  (cond ((or (equal? x 'undefined) (equal? y 'undefined)) 'undefined)
+        (else (+ x y))))
+
+(define (subtract x y)
+  (cond ((or (equal? x 'undefined) (equal? y 'undefined)) 'undefined)
+        (else (- x y))))
+
+(define (multiply x y)
+  (cond ((or (equal? x 'undefined) (equal? y 'undefined)) 'undefined)
+        (else (* x y))))
+
+(define (divide x y)
+  (cond ((or (equal? x 'undefined) (equal? y 'undefined)) 'undefined)
+        (else (/ x y))))
+
+(define (exponent x y)
+  (cond ((or (equal? x 'undefined) (equal? y 'undefined)) 'undefined)
+        (else (expt x y))))
+
+(define (my-modulo x y)
+  (cond ((or (equal? x 'undefined) (equal? y 'undefined)) 'undefined)
+        (else (modulo x y))))
 
 ;; Function that handles a block
 (define (block lst env)
@@ -116,8 +142,8 @@
   (list key value))
 
 (define (get-from-environment env key)
-  (cond ((null? env) '())
-         ((equal? key (car (car env))) (cadr (car env)))
+  (cond ((null? env) 'undefined)
+         ((equal? key (car (car env))) (car (cadr (car env))))
          (else (get-from-environment (cdr env) key))))
 
 (define (environment-contains env key)

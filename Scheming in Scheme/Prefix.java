@@ -38,6 +38,7 @@ public class Prefix{
                 expression = scanner.nextLine();
                 Scanner expScanner = new Scanner(expression);
                 System.out.println(EvaluateExpression(expScanner, new Hashtable<>(), false));
+                expScanner.close();
             }
 
             //Close streams
@@ -114,11 +115,6 @@ public class Prefix{
         else if (token.equals("undefined")){
             return "undefined";
         }
-        //Opening Parens mark the beginning of a new expression
-        // else if (token.equals("(")) {
-        //     return EvaluateExpression(scanner, environment, false);
-        // }
-
         //Evaluate and return the environment when block is used.
         else if (token.toLowerCase().equals("block")) {
             return evaluateBlock(scanner, environment);

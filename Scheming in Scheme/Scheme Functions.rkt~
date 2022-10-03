@@ -1,0 +1,19 @@
+#lang scheme
+
+;; Partition: accepts a list L and an integer N. The function partitions L into lists of length N and returns these partitions as a list. The last element in the returned list may
+;; have a length that is less than N. If N is non-positive, it is treated as the value 1.
+(define (partition L N)
+  (cond ((null? L) '())
+        ((<= N 0) (partition L 1))
+        (else (cons (cons (car L) (partition (cdr L) (- N 1))) (cdr L)))))
+
+;; Cycle: Accepts a list of elements ALIST and an integer N. This function returns a list containing N repetitions of the elements of ALIST. If N is non-positive, this function returns the empty list. 
+(define (cycle ALIST N)
+  (cond ((null? ALIST) '())
+        ((<= N 0) '())
+        (else (cons ALIST (cycle ALIST (- N 1))))))
+
+;; Accepts a list of elements and returns that list where all SYM's (a single symbol) have been replaced by the VAL (some scheme value). The replacement must occur even within nested lists.
+(define (list-replace ALIST SYM VAL)
+  (cond ((null? ALIST) '())
+        

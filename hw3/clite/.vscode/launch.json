@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Interpreter",
+            "request": "launch",
+            "mainClass": "clite.interpreter.Interpreter",
+            "args": [
+                "test5.txt"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "Launch TypeChecker",
+            "request": "launch",
+            "mainClass": "clite.typing.Interpreter",
+            "args": [
+                "test1.txt"
+            ]
+        }
+    ]
+}
